@@ -46,35 +46,37 @@ int main() {
     // Here we are populating the class. Consider moving this to a function later
     // 
     // We use a stack to be able to keep track of the previously handled tag and nest correctly
-    stack<Tag> S;
+    stack<Tag*> S; // Use pointers because it's easier to push and pop pointers than whole classes.
     cin.ignore(); // This is required I dont know why
     while (N--) {
-        map<string, string> attributes;
-        pair<string, string> p;
-        string str, ch; // For handling content
+        
+        string str; // For handling content
 
         // Obtain line by line
         getline(cin, str);
         str = str.substr(1, str.size() - 2); // Clip the < > at the extremes
 
-        if (str[1] == '/') {
+        if (str[1] == '/') { // THis block should never run in the first iteration
             // If the line is a tag ender, first check whether this is a subtag of some other
             // This by checking there is only 1 tg in the stack
             // If that's the case, add the nested tag to the father
             if (S.size() > 1) {
-                Tag temp = S.top();
+                Tag* temp = S.top();
                 S.pop();
-                S.top().addSubtag(&temp);
+                S.top()->addSubtag(temp);
             }
-
         } else {
             // Use stringstream to obtain the differnt variables in the line
+            map<string, string> attributes;
+            pair<string, string> p;
+
             stringstream ss(str);
-            string name;
-            ss >> name; // Get tag name
-            while (ss >> p.first >> ch >> p.second) { // Get attributes and names (remember retunrs false when there is nothing)
+            string name, ch;
+            ss >> name; 
+            // Get attributes and names (remember retunrs false when there is nothing) and populate the map
+            while (ss >> p.first >> ch >> p.second) { 
                 p.second = p.second.substr(1, p.second.size() - 2);
-                attributes.insert(p); // Populate the map
+                attributes.insert(p); 
             }
 
             // Here we just print the variables for checking
@@ -82,11 +84,9 @@ int main() {
             for (map<string, string>::iterator it = attributes.begin(); it != attributes.end(); it++) {
                 cout << "Attribute called " << it->first << " with value " << it->second << endl;
             }
-
-            // Insert
-            // If the next line is a new tag do something, if it´s a closing one do something else
-            // If next line is closing, pop, update N
-            // If not, go to next line (start the cicle again)
+            
+            Tag tag(&attributes); // Build current tag with corresponding attributes
+            S.push(&tag); // Add it to the stack
         }
     }
     return 0;
