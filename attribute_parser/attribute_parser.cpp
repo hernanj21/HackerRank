@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <vector>
 #include <map>
+#include <set>
 #include <stack>
 #include <string>
 #include <iostream>
@@ -10,22 +11,19 @@
 using namespace std;
 
 class Tag {
-public:
+private:
     map<string, string>* attributes;
-    map<string, Tag*>* subtags;
-    Tag() {
-        attributes = NULL;
+    set<Tag*>* subtags;
+public:
+    Tag(map<string, string>* att) {
+        attributes = att;
         subtags = NULL;
     }
-    Tag(map<string, string>* att, map<string, Tag*>* stgs) {
-        attributes = att;
-        subtags = stgs;
+    void setAttributes(map<string, string>* attr) {
+        attributes = attr;
     }
-    void newAttribute(string name, string value) {
-        pair<string, string> p;
-        p.first = name;
-        p.second = value;
-        attributes->insert(p);
+    void addSubtag(Tag* st) {
+        subtags->insert(st);
     }
 };
 
@@ -59,26 +57,37 @@ int main() {
         getline(cin, str);
         str = str.substr(1, str.size() - 2); // Clip the < > at the extremes
 
-        // USe stringstream to obtain the differnt variables in the line
-        stringstream ss(str);
-        string name;
-        ss >> name; // Get tag name
-        while (ss >> p.first >> ch >> p.second) { // Get attributes and names (remember retunrs false when there is nothing)
-            p.second = p.second.substr(1, p.second.size() - 2);
-            attributes.insert(p); // Populate the map
+        if (str[1] == '/') {
+            // If the line is a tag ender, first check whether this is a subtag of some other
+            // This by checking there is only 1 tg in the stack
+            // If that's the case, add the nested tag to the father
+            if (S.size() > 1) {
+                Tag temp = S.top();
+                S.pop();
+                S.top().addSubtag(&temp);
+            }
+
+        } else {
+            // Use stringstream to obtain the differnt variables in the line
+            stringstream ss(str);
+            string name;
+            ss >> name; // Get tag name
+            while (ss >> p.first >> ch >> p.second) { // Get attributes and names (remember retunrs false when there is nothing)
+                p.second = p.second.substr(1, p.second.size() - 2);
+                attributes.insert(p); // Populate the map
+            }
+
+            // Here we just print the variables for checking
+            cout << "Name " << name << endl;
+            for (map<string, string>::iterator it = attributes.begin(); it != attributes.end(); it++) {
+                cout << "Attribute called " << it->first << " with value " << it->second << endl;
+            }
+
+            // Insert
+            // If the next line is a new tag do something, if it´s a closing one do something else
+            // If next line is closing, pop, update N
+            // If not, go to next line (start the cicle again)
         }
-
-        // Here we just print the variables for checking
-        cout << "Name " << name << endl;
-        for (map<string, string>::iterator it = attributes.begin(); it != attributes.end(); it++) {
-            cout << "Attribute called " << it->first << " with value " << it->second << endl;
-        }
-
-        // Insert
-        // If the next line is a new tag do something, if it´s a closing one do something else
-        // If next line is closing, pop, update N
-        // If not, go to next line (start the cicle again)
-
     }
     return 0;
 }
