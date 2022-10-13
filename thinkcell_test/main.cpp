@@ -23,6 +23,7 @@ public:
 		// Here I should edit m_map
 		// REMEMBER TO DELETE IOSTREAM ABOVE AND TRY IT WITH THAT
 		// auto ub = m_map.upper_bound(keyEnd);
+		auto ub = m_map.upper_bound(keyBegin);
 		auto lb = m_map.lower_bound(keyEnd); // This will give the value for the upper limit
 		//std::cout << "Upper bound = begin " << (m_map.upper_bound(keyEnd) == m_map.begin()) << std::endl;
 		//std::cout << "Upper bound = end " << (m_map.upper_bound(keyEnd) == m_map.end()) << std::endl;
@@ -40,7 +41,19 @@ public:
 		}
 		else {
 			// If not, we set the corresponding value which is the one of lowerbound
-			m_map.insert({ keyEnd, (--lb)->second }); // INsert value of lower bound (previous one bc lower bound is itself)
+			
+			// For the case of when the next interval is just after an existing one
+			// and the lower bound corresponds to the upper bound of the previous one
+			
+			V valEnd = (--lb)->second;
+			
+			if (ub == lb) {
+				m_map.erase(lb);
+			}
+
+			m_map.erase(ub, ++lb); // ++ because i decreased it before
+
+			m_map.insert({ keyEnd, valEnd }); // INsert value of lower bound (previous one bc lower bound is itself)
 			m_map.insert({ keyBegin, val }); // Insert the asked value
 			std::cout << "Inside the else one time" << std::endl;
 		}
@@ -82,26 +95,47 @@ public:
 
 #include<iostream>
 int main() {
-	int init;
-	std::cout << "Init value ";
+	int init = 0;
+	/*std::cout << "Init value ";
 	std::cin >> init;
-	std::cout << std::endl;
+	std::cout << std::endl;*/
 	interval_map<int, int> M(init);
 	std::cout << "Queries ..." << std::endl;
 	
 	int q = 1;
 
-	M.assign(2, 10, 1);
-	M.assign(6, 8, 2);
+	// Subinterval test
+	/*M.assign(2, 10, 1);
+	M.assign(6, 8, 2);*/
 
+	// Add interval before test
 	/*M.assign(7, 9, 1);
 	M.assign(2, 5, 2);*/
 
-	while (q != 0) {
-		std::cout << "Insert query: ";
-		std::cin >> q;
-		std::cout << "Value: " << M[q] << std::endl;
+	// Add interval after test
+	/*M.assign(2, 5, 1);
+	M.assign(7, 9, 2);*/
+
+	// Add one just next to the other
+	M.assign(2, 6, 1);
+	M.assign(6, 9, 2);
+
+	// Add in a border intersection
+	/*M.assign(2, 6, 1);
+	M.assign(6, 9, 2);
+	M.assign(4, 8, 3);*/
+
+	// Add in a sepparated intersection
+	/*M.assign(7, 9, 1);
+	M.assign(2, 5, 2);
+	M.assign(4, 8, 3);*/
+
+	while (q != 11) {
+		/*std::cout << "Insert query: ";
+		std::cin >> q;*/
+		std::cout << "Query: " << q << " Value: " << M[q] << std::endl;
 		std::cout << std::endl;
+		q++;
 	} 
 
 	return 0;
