@@ -20,26 +20,37 @@ public:
 	// and assign must do nothing.
 	void assign(K const& keyBegin, K const& keyEnd, V const& val) {
 		// INSERT YOUR SOLUTION HERE
-		auto ub = m_map.upper_bound(keyBegin); // Closest up to the lower bound
-		auto lb = m_map.lower_bound(keyEnd); // Closest belos the upper bound
-		if (lb == m_map.begin()) {
-			// If its empty we will assign the end value to the upper limit
-			// If its because there is no lower one so far we do the same
-			m_map.insert({ keyBegin, val });
-			m_map.insert({ keyEnd, m_valBegin });
-		}
-		else {
-			V valEnd = (--lb)->second;
-			auto check = m_map.find(keyBegin);
-			if (check != m_map.end()) { // When the first key coincides with another first key we have problems
-				// We just replace the new value
-				m_map[keyBegin] = val;
-				m_map.insert({ keyEnd, valEnd });
+		// Iterators to closest values to keyBegin and keyEnd
+		if (keyBegin < keyEnd) {
+			auto ub = m_map.upper_bound(keyBegin);
+			auto lb = m_map.lower_bound(keyEnd);
+
+			if (lb == m_map.begin()) {
+				// This is true when m_map is empty or when keyEnd is lower than the lowest one in m_map
+				m_map.insert({ keyBegin, val });
+				m_map.insert({ keyEnd, m_valBegin });
 			}
 			else {
-				m_map.erase(ub, ++lb);
-				m_map.insert({ keyEnd, valEnd }); // INsert value of lower bound (previous one bc lower bound is itself)
-				m_map.insert({ keyBegin, val }); // Insert the asked value
+				V valEnd = (--lb)->second; // Store value for the next interval before operating
+
+				bool check; // This checks whether keyBegin already exists iwhtout using find()
+				if (ub == m_map.begin()) {
+					check = false;
+					m_map.erase(ub, ++lb); // Delete intervals covered by the newly assigned
+				}
+				else {
+					check = ((--ub)->first == keyBegin);
+					m_map.erase(++ub, ++lb);
+				}
+
+				if (check) {
+					m_map[keyBegin] = val; // Just replace if the key exists
+				}
+				else {
+					m_map.insert({ keyBegin, val });
+				}
+
+				m_map.insert({ keyEnd, valEnd });
 			}
 		}
 	}
@@ -82,8 +93,11 @@ int main() {
 	int q = 1;
 
 	// Subinterval test
-	/*M.assign(2, 10, 1);
-	M.assign(6, 8, 2);*/
+	
+	/*M.assign(6, 8, 2);
+	M.assign(2, 10, 1);*/
+	
+	
 
 	// Add interval before test
 	/*M.assign(7, 9, 1);
@@ -103,9 +117,20 @@ int main() {
 	M.assign(4, 8, 3);*/
 
 	// Add in a sepparated intersection
-	M.assign(7, 9, 1);
+	/*M.assign(7, 9, 1);
 	M.assign(2, 5, 2);
-	M.assign(4, 8, 3);
+	M.assign(4, 8, 3);*/
+
+	// Add in a sepparated intersection
+	//M.assign(7, 9, 1);
+	//M.assign(2, 5, 2);
+	//M.assign(4, 9, 3);
+	//M.assign(6, 7, 8); // add a single value
+
+	M.assign(1, 4, 1);
+	M.assign(6, 8, 3);
+	M.assign(8, 10, 2);
+	M.assign(4, 9, 4);
 
 	while (q != 11) {
 		/*std::cout << "Insert query: ";
