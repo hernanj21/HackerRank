@@ -4,6 +4,7 @@
 #include <map>
 #include <set>
 #include <stack>
+#include <queue>
 #include <string>
 #include <iostream>
 #include <algorithm>
@@ -16,24 +17,35 @@ public:
     map<string, Tag> subtags;
 };
 
+string search(string query, map<string, Tag>* O) {
+    string ch, print, print2, print3;
+    queue<string> q;
+    stringstream ss(query);
+    while (getline(ss, print, '.')) {
+        stringstream ss2(print);
+        getline(ss2, print2, '~');
+        q.push(print2);
+        getline(ss2, print3, '~');
+        if (print3.size() > 0) {
+            q.push(print3);
+        }
+    }
+    Tag current;
+    current = (*O)[q.front()];
+    while (q.size() > 2) {
+        q.pop();
+        Tag temp = current.subtags[q.front()];
+        current = temp;
+    }
+    q.pop();
+    return current.attributes[q.front()];
+}
+
 
 int main() {
-    /* Enter your code here. Read input from STDIN. Print output to STDOUT */
-    int N; // N lines, Q queries
-    cin >> N;
+    int N, Q; // N lines, Q queries
+    cin >> N >> Q;
 
-    // Create a stack, we will work in the elemment on the top always, and when we find the end, insert it
-    // to the element containing it (second from top to bottom) and discard the top.
-
-
-    // do while(stack.size() > 0)? No because maybe there are subsequent stacks (1 on top of the other),
-    // and then I wont be able to read th second one. I have to stop based on N
-    // Probably I have to use both with a boolean operator.
-    // I think not
-
-    // (TO DO) Read tag name and attributes, insert attributes
-    // Here we are populating the class. Consider moving this to a function later
-    // 
     // We use a stack to be able to keep track of the previously handled tag and nest correctly
     stack<Tag> S; // Use pointers because it's easier to push and pop pointers than whole classes.
     map<string, Tag> O; // Outer tags
@@ -47,15 +59,11 @@ int main() {
         
         if (str[0] == '/') {
             string name = str.substr(1, str.size() - 1);
-            cout << "TAG NAME = " << name << endl;
             if (S.size() > 1) {
                 Tag t;
                 t = S.top();
                 S.pop();
-                cout << "Inserting " << name << " with " << t.attributes.size() << " attributes" << endl;
-                //cout << "Size before inserting: " << S.top().subtags.size() << endl;
                 S.top().subtags.insert(make_pair(name, t));
-                //cout << "Size after inserting: " << S.top().subtags.size() << endl;
             }
             else { 
                 // The tag is outer if the size is = 1 and then it goes to the outer map because
@@ -77,42 +85,25 @@ int main() {
                 p.second = p.second.substr(1, p.second.size() - 2);
                 att.insert(p);
             }
-
-            // CONSIDER HERE GET RID OF ATTRIBUTES INTERMEDIATE VARIALBE AND
-            // USE tag.insertAttribute() *******************************************************
             Tag tag;
             tag.attributes = att;
             S.push(tag); // Add it to the stack
-
-            // Here we just print the variables for checking
-            cout << "Name " << name << endl;
-            cout << "Size of attributes " << S.top().attributes.size() << endl;
-            for (map<string, string>::iterator it = S.top().attributes.begin(); it != S.top().attributes.end(); it++) {
-                cout << "Attribute called " << it->first << " with value " << it->second << endl;
-            }
         }
     }
-    cout << endl << endl;
-    // Print some nested classes manually
-    // tag1.tag2~name:
-    cout << "tag1.tag2~name = " << O["tag1"].subtags["tag2"].attributes["name"] << endl;
-    // string attee = O["tag1"].subtags["tag3"]->attributes["final"];
-    cout << endl << endl;
-    cout << "Number of Tag1 subtags: " << O["tag1"].subtags.size() << endl;
+    string query;
     
-    map<string, Tag> sts = O["tag1"].subtags;
-    for (map<string, Tag>::iterator iter = sts.begin(); iter != sts.end(); iter++) {
-        cout << "Subtag called " << iter->first << endl;
-        cout << "with " << iter->second.attributes.size() << " attributes: ..." << endl;
-        for (map<string, string>::iterator ite = iter->second.attributes.begin(); ite != iter->second.attributes.end(); ite++) {
-            cout << "Attribute called " << ite->first << " with value " << ite->second << endl;
-        }
-        cout << endl << endl;
+    while (Q--) {
+        cin >> query;
+        string output = search(query, &O);
+        if (output.size() > 0)
+            cout << output << endl;
+        else
+            cout << "Not Found!" << endl;
     }
+    
     return 0;
 }
-/* For checking use <tag3 another = "another_value" final = "final_value"> 
-* 
+/* Some test cases
 1
 <tag3 another = "another" final = "final">
 </tag3>
@@ -123,13 +114,19 @@ int main() {
 </tag3>
 </tag2>
 
-6
+12 2
 <tag1 value = "value">
 <tag2 name = "name">
 </tag2>
 <tag3 another = "another" final = "final">
 </tag3>
 </tag1>
-
-
+<tag4 value = "value4">
+<tag5 name = "name5">
+<tag6 another = "another6" final = "final6">
+</tag6>
+</tag5>
+</tag4>
+tag4.tag5.tag6~another
+tag1.tag3~final
 */
